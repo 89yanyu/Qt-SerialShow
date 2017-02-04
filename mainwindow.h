@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QSerialPort>
+#include <QTextStream>
 
 namespace Ui {
 class MainWindow;
@@ -17,7 +18,9 @@ public:
     ~MainWindow();
 private:
     void UpdateComboList();
-    int m_TimerId;
+    void CloseSerialPort();
+    double LastKp, LastKi, LastKd;
+    void waitmillsecond(int millsecond);
 
 private slots:
     void on_RefreshButton_clicked();
@@ -26,12 +29,10 @@ private slots:
 
     void on_SendButton_clicked();
 
-public slots:
-    void ProcRecvMsg();
-
 private:
     Ui::MainWindow *ui;
     QSerialPort *m_serialport;
+    QTextStream m_serialstream;
 };
 
 #endif // MAINWINDOW_H
