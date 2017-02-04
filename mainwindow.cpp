@@ -32,6 +32,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::ProcRecvMsg()
 {
+    ui->textBrowser->moveCursor(QTextCursor::End);
     ui->textBrowser->insertPlainText(QString(m_serialport->readAll()));
 }
 
