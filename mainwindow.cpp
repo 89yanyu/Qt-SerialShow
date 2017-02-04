@@ -2,13 +2,16 @@
 #include "ui_mainwindow.h"
 #include <QSerialPort>
 #include <QSerialPortInfo>
+#include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_serialport(new QSerialPort)
 {
     ui->setupUi(this);
-    m_TimerId = startTimer(1000);
+    UpdateComboList();
+    ui->textBrowser->setLineWrapMode(QTextBrowser::NoWrap);
 }
 
 void MainWindow::UpdateComboList()
@@ -24,18 +27,66 @@ void MainWindow::UpdateComboList()
 MainWindow::~MainWindow()
 {
     delete ui;
-    killTimer(m_TimerId);
+    delete m_serialport;
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::ProcRecvMsg()
 {
-//    ui->textBrowser->setLineWrapMode(QTextBrowser::NoWrap);
-//    ui->textBrowser->insertPlainText(ui->textEdit->toPlainText());
-//    ui->textEdit->setPlainText("");
+    ui->textBrowser->insertPlainText(QString(m_serialport->readAll()));
 }
 
-void MainWindow::timerEvent(QTimerEvent *event)
+void MainWindow::on_RefreshButton_clicked()
 {
-    if (ui->comboBox->isEnabled()) return;
     UpdateComboList();
+}
+
+void MainWindow::on_OpenButton_clicked()
+{
+    if (ui->OpenButton->text() == "打开端口")
+    {
+        m_serialport->setPortName(ui->comboBox->currentText());
+        if (!m_serialport->open(QIODevice::ReadWrite))
+        {
+            QMessageBox::critical(this, "错误", "串口打开失败");
+            return;
+        }
+
+        m_serialport->setBaudRate(QSerialPort::Baud115200);
+        m_serialport->setStopBits(QSerialPort::OneStop);
+        m_serialport->setDataBits(QSerialPort::Data8);
+        m_serialport->setParity(QSerialPort::NoParity);
+        m_serialport->setFlowControl(QSerialPort::NoFlowControl);
+        connect(m_serialport, SIGNAL(readyRead()), this, SLOT(ProcRecvMsg()));
+        ui->OpenButton->setText("关闭端口");
+    }
+    else if (ui->OpenButton->text() == "关闭端口")
+    {
+        if (m_serialport->isOpen())
+        {
+            m_serialport->close();
+        }
+        ui->OpenButton->setText("打开端口");
+    }
+}
+
+void MainWindow::on_SendButton_clicked()
+{
+    if (m_serialport->isOpen())
+    {
+        QByteArray buff = ui->textEdit->toPlainText().toLocal8Bit();
+        if (m_serialport->write(buff) != buff.length())
+        {
+            if (m_serialport->isOpen())
+            {
+                m_serialport->close();
+            }
+            ui->OpenButton->setText("打开端口");
+            UpdateComboList();
+        }
+        ui->textEdit->clear();
+    }
+    else
+    {
+        QMessageBox::critical(this, "错误", "串口未打开");
+    }
 }
