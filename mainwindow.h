@@ -14,6 +14,13 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+private:
+    void UpdateComboList();
+    int m_TimerId;
+    void timerEvent(QTimerEvent *event);
+
+private slots:
+    void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
