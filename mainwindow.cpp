@@ -4,6 +4,7 @@
 #include <QSerialPortInfo>
 #include <QMessageBox>
 #include <QTime>
+#include <QPainter>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -178,9 +179,14 @@ void MainWindow::on_SendButton_clicked()
 
     waitmillsecond(1200);
     qDebug("Finish");
+    QList<int> points;
     while (m_serialstream.readLineInto(&Line))
     {
         qDebug(Line.toLocal8Bit());
+        points.push_back(Line.split(' ').at(0).toInt());
     }
+    qDebug(QString::asprintf("cnt:%d", points.size()).toLocal8Bit());
+    ui->Graph->UpdatePoints(points);
+
     ui->SendButton->setEnabled(true);
 }
